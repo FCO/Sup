@@ -1,0 +1,33 @@
+{
+  "auth": "zef:FCO",
+  "authors": [
+    "Fernando Corrêa de Oliveira"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "Something related to Erlang's OTP",
+  "license": "Artistic-2.0",
+  "name": "Sup",
+  "perl": "6.d",
+  "provides": {
+    "CX::Terminated": "lib/CX/Terminated.rakumod",
+    "Sup": "lib/Sup.rakumod",
+    "Sup::GenServer": "lib/Sup/GenServer.rakumod",
+    "Sup::GenServer::Traits": "lib/Sup/GenServer/Traits.rakumod",
+    "Sup::Process": "lib/Sup/Process.rakumod",
+    "Sup::Process::Subs": "lib/Sup/Process/Subs.rakumod",
+    "Sup::Supervisor": "lib/Sup/Supervisor.rakumod",
+    "Sup::Supervisor::Subs": "lib/Sup/Supervisor/Subs.rakumod",
+    "Sup::WithOrig": "lib/Sup/WithOrig.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "https://github.com/FCO/Sup.git",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}

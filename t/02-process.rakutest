@@ -1,0 +1,143 @@
+use Test;
+use Sup::Process;
+use Sup::Process::Subs;
+
+plan 2;
+
+isa-ok spawn({;}), Sup::Process;
+
+my $proc = spawn {
+	subtest {
+		plan 7;
+		pass "running...";
+		is self-proc, $proc;
+		is pid, 1;
+
+		does-ok $proc, Awaitable;
+		my $a = start {
+			sleep 1;
+			lives-ok {
+				$proc.send: "ok-{ $_ }" for 1 .. 4;
+			}
+		}
+		subtest {
+			plan 5;
+			is receive, \("ok-1"), "ok-1";
+			receive -> $value { is $value, "ok-2", "ok-2" };
+			my UInt $i = 1;
+			receive(
+				-> "ok-3" { is $i++, 1, "ok-3" },
+				-> "ok-4" { is $i++, 2, "ok-4" },
+			) xx 2;
+		}
+		await $a;
+
+		subtest "link", {
+			subtest "finish", {
+				plan 5;
+				my $p1 = spawn { loop { receive } };
+				my $p2 = spawn { sleep 1 };
+
+				lives-ok { $p1.link: $p2 }
+				ok $p1.started, "p1 is started";
+				ok $p2.started, "p2 is started";
+
+				await $p1, $p2;
+
+				ok !$p1.started, "p1 is stopped";
+				ok !$p2.started, "p2 is stopped";
+			}
+			# TODO: fix catch
+			# subtest "die", {
+			# 	plan 5;
+			# 	my $p1 = spawn { loop { receive } };
+			# 	my $p2 = spawn { sleep 1; die };
+			#
+			# 	lives-ok { $p1.link: $p2 }
+			# 	ok $p1.started, "p1 is started";
+			# 	ok $p2.started, "p2 is started";
+			#
+			# 	await $p1, $p2;
+			#
+			# 	ok !$p1.started, "p1 is stopped";
+			# 	ok !$p2.started, "p2 is stopped";
+			# }
+			subtest "call terminate", {
+				plan 5;
+				my $p1 = spawn { loop { receive } };
+				my $p2 = spawn { loop { receive } };
+
+				lives-ok { $p1.link: $p2 }
+				ok $p1.started, "p1 is started";
+				ok $p2.started, "p2 is started";
+
+				$p2.terminate;
+				await $p1, $p2;
+
+				ok !$p1.started, "p1 is stopped";
+				ok !$p2.started, "p2 is stopped";
+			}
+		}
+
+		subtest "spawn-link", {
+			subtest "finish", {
+				plan 4;
+				my $p2;
+				my $p1 = spawn {
+					$p2 = spawn-link { sleep 1 }
+					loop { receive }
+				}
+
+				sleep 1;
+
+				ok $p1.started, "p1 is started";
+				ok $p2.started, "p2 is started";
+
+				await $p1, $p2;
+
+				ok !$p1.started, "p1 is stopped";
+				ok !$p2.started, "p2 is stopped";
+			}
+			# TODO: fix catch
+			# subtest "die", {
+			# 	plan 4;
+			# 	my $p2;
+			# 	my $p1 = spawn {
+			# 		$p2 = spawn-link { sleep 1; die }
+			# 		loop { receive }
+			# 	}
+			#
+			#	sleep 1;
+			#
+			# 	ok $p1.started, "p1 is started";
+			# 	ok $p2.started, "p2 is started";
+			#
+			# 	await $p1, $p2;
+			#
+			# 	ok !$p1.started, "p1 is stopped";
+			# 	ok !$p2.started, "p2 is stopped";
+			# }
+			subtest "call teminate", {
+				plan 4;
+				my $p2;
+				my $p1 = spawn {
+					$p2 = spawn-link { loop { receive } };
+					loop { receive }
+				};
+
+				sleep 1;
+
+				ok $p1.started, "p1 is started";
+				ok $p2.started, "p2 is started";
+
+				$p2.terminate;
+				await $p1, $p2;
+
+				ok !$p1.started, "p1 is stopped";
+				ok !$p2.started, "p2 is stopped";
+			}
+		}
+	}
+}
+
+await $proc

@@ -1,0 +1,6 @@
+use Test;
+use Sup::GenServer;
+
+pass "replace me";
+
+done-testing;
